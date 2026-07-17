@@ -1,0 +1,40 @@
+name: Deploy NCA Toolkit VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+
+        with:
+          host: 209.50.254.85
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+          script: |
+            cd /opt/no-code-architects-toolkit
+
+            echo "Baixando atualizações..."
+            git pull origin main
+
+            echo "Parando container..."
+            docker compose down
+
+            echo "Criando nova imagem..."
+            docker compose build --no-cache
+
+            echo "Subindo container..."
+            docker compose up -d
+
+            echo "Limpando imagens antigas..."
+            docker image prune -f
+
+            echo "Deploy concluído!"
